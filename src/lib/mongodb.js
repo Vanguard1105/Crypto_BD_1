@@ -11,8 +11,6 @@ const connectToDatabase = async () => {
   }
 
   const client = new MongoClient(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     connectTimeoutMS: 10000,
   });

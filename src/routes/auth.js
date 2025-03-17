@@ -7,10 +7,9 @@ const router = express.Router();
 // Login endpoint
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password)
-  const db = getDb();
   
   try {
+    const db = await getDb(); // Ensure we await the database connection
     const user = await db.collection('betting').findOne({ username });
     
     if (!user) {
@@ -28,20 +27,17 @@ router.post('/login', async (req, res) => {
 
     res.status(200).json({ message: 'Login successful' });
   } catch (err) {
-    console.log(err)
+    console.error('Login error:', err);
     res.status(500).json({ message: 'Server error' });
-
   }
 });
 
 // Signup/Set password endpoint
 router.post('/set-password', async (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password)
 
-  const db = getDb();
-  
   try {
+    const db = await getDb(); // Ensure we await the database connection
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -52,15 +48,16 @@ router.post('/set-password', async (req, res) => {
 
     res.status(200).json({ message: 'Password set successfully' });
   } catch (err) {
+    console.error('Set password error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 router.get('/getData/:username', async (req, res) => {
   const { username } = req.params;
-  const db = getDb();
-
+  
   try {
+    const db = await getDb(); // Ensure we await the database connection
     const user = await db.collection('betting').findOne({ username });
     
     if (!user) {
@@ -70,11 +67,12 @@ router.get('/getData/:username', async (req, res) => {
     const userData = {
       username: user.username,
       publicKey: user.public_key,
-      hasPassword: !!user.password  // Returns true if password exists, false otherwise
+      hasPassword: !!user.password
     };
 
     res.status(200).json(userData);
   } catch (err) {
+    console.error('Get data error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });

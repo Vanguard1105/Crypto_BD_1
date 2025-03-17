@@ -1,24 +1,31 @@
 const { MongoClient } = require('mongodb');
+require('dotenv').config(); // Add this line to load .env file
 
-const uri = "mongodb+srv://vanguard951105:F0Y7B0MtjvH1OFbL@cluster0.haemz.mongodb.net/";
+const uri = process.env.MONGODB_URI; // Use environment variable
 const client = new MongoClient(uri);
 
 let dbConnection;
+let connectionPromise;
 
 const connectToDatabase = async () => {
-  try {
-    const connection = await client.connect();
-    dbConnection = connection.db('solana');
-    console.log('Successfully connected to MongoDB');
-  } catch (err) {
-    console.error('Connection to MongoDB failed', err);
-    process.exit(1);
+  if (!connectionPromise) {
+    connectionPromise = client.connect()
+      .then(connection => {
+        dbConnection = connection.db('solana');
+        console.log('Successfully connected to MongoDB');
+        return dbConnection;
+      })
+      .catch(err => {
+        console.error('Connection to MongoDB failed', err);
+        process.exit(1);
+      });
   }
+  return connectionPromise;
 };
 
-const getDb = () => {
+const getDb = async () => {
   if (!dbConnection) {
-    throw new Error('No database connection');
+    await connectToDatabase();
   }
   return dbConnection;
 };

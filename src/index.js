@@ -4,7 +4,7 @@ const { connectToDatabase } = require('./lib/mongodb');
 const authRoutes = require('./routes/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT =  3000;
 
 // Middleware
 app.use(cors());  // Add this line to enable CORS for all routes

@@ -28,7 +28,7 @@ const calculateAverage = (data) => {
 const fetchSolanaPrice = async (retryCount = 0) => {
   try {
     const response = await axios.get('https://api.coinbase.com/v2/prices/SOL-USD/spot', {
-      timeout: 3000 // Set timeout to 2 seconds
+      timeout: 5000 // Set timeout to 2 seconds
     });
     const price = parseFloat(response.data.data.amount);
     
@@ -104,7 +104,7 @@ const updatePriceHistory = async () => {
 };
 
 // Start updating price history every 333ms (3 times per second)
-setInterval(updatePriceHistory, 333);
+setInterval(updatePriceHistory, 500);
 
 // Endpoint to get price history
 router.get('/history', (req, res) => {

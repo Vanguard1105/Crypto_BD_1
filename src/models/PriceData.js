@@ -19,6 +19,8 @@ const priceDataSchema = new mongoose.Schema({
     type: Number,
     required: true
   }
+}, {
+  collection: 'pricedata' // Explicitly set the collection name
 });
 
 // Indexes for faster queries

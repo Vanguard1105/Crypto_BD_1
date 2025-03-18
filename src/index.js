@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { connectToDatabase } = require('./lib/mongodb');
 const authRoutes = require('./routes/auth');
+const priceRoutes = require('./routes/price'); // Add new price routes
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,5 +26,6 @@ const startServer = async () => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/price', priceRoutes); // Add new price routes
 
 startServer();

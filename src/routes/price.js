@@ -28,7 +28,7 @@ const calculateAverage = (data) => {
 const fetchSolanaPrice = async (retryCount = 0) => {
   try {
     const response = await axios.get('https://api.coinbase.com/v2/prices/SOL-USD/spot', {
-      timeout: 5000 // Set timeout to 2 seconds
+      timeout: 3000 // Set timeout to 2 seconds
     });
     const price = parseFloat(response.data.data.amount);
     
@@ -50,7 +50,7 @@ const fetchSolanaPrice = async (retryCount = 0) => {
     
     // Retry up to 3 times
     if (retryCount < 3) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return fetchSolanaPrice(retryCount + 1);
     }
     

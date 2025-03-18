@@ -4,11 +4,11 @@ const router = express.Router();
 
 // In-memory storage for price history
 const priceHistory = {
-  ms: [],
-  '5m': [],
-  '1h': [],
-  '1d': [],
-  '7d': [],
+  ms: [],      // Real-time data (500ms interval)
+  '5m': [],    // Average data (1 second interval)
+  '1h': [],    // Average data (10 seconds interval)
+  '1d': [],    // Average data (5 minutes interval)
+  '7d': [],    // Average data (30 minutes interval)
 };
 
 // Cache for the latest price
@@ -18,17 +18,11 @@ let cachedPrice = {
   validUntil: Date.now(),
 };
 
-// Helper function to calculate average
-const calculateAverage = (data) => {
-  const sum = data.reduce((acc, point) => acc + point.price, 0);
-  return sum / data.length;
-};
-
 // Fetch current Solana price with retry logic
 const fetchSolanaPrice = async (retryCount = 0) => {
   try {
     const response = await axios.get('https://api.coinbase.com/v2/prices/SOL-USD/spot', {
-      timeout: 3000 // Set timeout to 2 seconds
+      timeout: 2000 // Set timeout to 2 seconds
     });
     const price = parseFloat(response.data.data.amount);
     
@@ -50,7 +44,7 @@ const fetchSolanaPrice = async (retryCount = 0) => {
     
     // Retry up to 3 times
     if (retryCount < 3) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
       return fetchSolanaPrice(retryCount + 1);
     }
     
@@ -65,45 +59,51 @@ const updatePriceHistory = async () => {
 
   const now = Date.now();
 
-  // Update ms history
-  priceHistory.ms.push({ timestamp: now, price: newPrice });
-  if (priceHistory.ms.length > 300) priceHistory.ms.shift();
-
-  // Update 5m history (1 second interval)
-  if (priceHistory['5m'].length === 0 || now - priceHistory['5m'][priceHistory['5m'].length - 1].timestamp >= 1000) {
-    priceHistory['5m'].push({ timestamp: now, price: newPrice });
-    if (priceHistory['5m'].length > 300) priceHistory['5m'].shift();
+  // Update ms history (real-time data, 500ms interval)
+  if (priceHistory.ms.length === 0 || now - priceHistory.ms[priceHistory.ms.length - 1].timestamp >= 500) {
+    priceHistory.ms.push({
+      timestamp: now,
+      price: newPrice,
+      average: newPrice // For ms, average is same as price
+    });
+    
+    if (priceHistory.ms.length > 300) {
+      priceHistory.ms.shift();
+    }
   }
 
-  // Update 1h history (10 seconds interval)
-  if (priceHistory['1h'].length === 0 || now - priceHistory['1h'][priceHistory['1h'].length - 1].timestamp >= 10000) {
-    priceHistory['1h'].push({ timestamp: now, price: newPrice });
-    if (priceHistory['1h'].length > 360) priceHistory['1h'].shift();
-  }
+  // Helper function to update average periods
+  const updateAveragePeriod = (period, interval, maxPoints) => {
+    if (priceHistory[period].length === 0 || 
+        now - priceHistory[period][priceHistory[period].length - 1].timestamp >= interval) {
+      
+      // Calculate new average
+      const previousPrices = priceHistory[period].slice(-maxPoints);
+      const sum = previousPrices.reduce((acc, point) => acc + point.average, newPrice);
+      const count = previousPrices.length + 1;
+      const newAverage = sum / count;
 
-  // Update 1d history (5 minutes interval)
-  if (priceHistory['1d'].length === 0 || now - priceHistory['1d'][priceHistory['1d'].length - 1].timestamp >= 300000) {
-    priceHistory['1d'].push({ timestamp: now, price: newPrice });
-    if (priceHistory['1d'].length > 288) priceHistory['1d'].shift();
-  }
+      priceHistory[period].push({
+        timestamp: now,
+        price: newPrice,       // Keep the actual price for reference
+        average: newAverage    // Store the calculated average
+      });
 
-  // Update 7d history (30 minutes interval)
-  if (priceHistory['7d'].length === 0 || now - priceHistory['7d'][priceHistory['7d'].length - 1].timestamp >= 1800000) {
-    priceHistory['7d'].push({ timestamp: now, price: newPrice });
-    if (priceHistory['7d'].length > 336) priceHistory['7d'].shift();
-  }
+      // Keep only the last maxPoints
+      if (priceHistory[period].length > maxPoints) {
+        priceHistory[period].shift();
+      }
+    }
+  };
 
-  // Calculate averages for all periods
-  Object.keys(priceHistory).forEach(period => {
-    const average = calculateAverage(priceHistory[period]);
-    priceHistory[period] = priceHistory[period].map(point => ({
-      ...point,
-      average,
-    }));
-  });
+  // Update average periods
+  updateAveragePeriod('5m', 1000, 300);      // 300 points, 1 second interval
+  updateAveragePeriod('1h', 10000, 360);     // 360 points, 10 seconds interval
+  updateAveragePeriod('1d', 300000, 288);    // 288 points, 5 minutes interval
+  updateAveragePeriod('7d', 1800000, 336);   // 336 points, 30 minutes interval
 };
 
-// Start updating price history every 333ms (3 times per second)
+// Start updating price history every 500ms
 setInterval(updatePriceHistory, 500);
 
 // Endpoint to get price history

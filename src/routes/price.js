@@ -11,43 +11,29 @@ const priceHistory = {
   '7d': [],    // Average data (30 minutes interval)
 };
 
-// Cache for the latest price
-let cachedPrice = {
-  price: 0,
-  timestamp: Date.now(),
-  validUntil: Date.now(),
-};
+// // Function to print ms price every second
+// const printMsPrice = () => {
+//   if (priceHistory.ms.length > 0) {
+//     const latestPrice = priceHistory.ms[priceHistory.ms.length - 1];
+//     console.log(`[${new Date().toISOString()}] MS Price: $${priceHistory.ms.length}`);
+//   }
+// };
+
+// // Start printing ms price every second
+// setInterval(printMsPrice, 1000);
 
 // Fetch current Solana price with retry logic
 const fetchSolanaPrice = async (retryCount = 0) => {
   try {
     const response = await axios.get('https://api.coinbase.com/v2/prices/SOL-USD/spot', {
-      timeout: 2000 // Set timeout to 2 seconds
+      timeout: 2000
     });
-    const price = parseFloat(response.data.data.amount);
-    
-    // Update cache
-    cachedPrice = {
-      price,
-      timestamp: Date.now(),
-      validUntil: Date.now() + 1000 // Cache valid for 1 second
-    };
-    
-    return price;
+    return parseFloat(response.data.data.amount);
   } catch (error) {
-    console.error('Error fetching Solana price:', error);
-    
-    // If we have a cached price and it's still valid, return it
-    if (cachedPrice.validUntil > Date.now()) {
-      return cachedPrice.price;
-    }
-    
-    // Retry up to 3 times
     if (retryCount < 3) {
       await new Promise(resolve => setTimeout(resolve, 500));
       return fetchSolanaPrice(retryCount + 1);
     }
-    
     return null;
   }
 };
@@ -67,7 +53,7 @@ const updatePriceHistory = async () => {
       average: newPrice // For ms, average is same as price
     });
     
-    if (priceHistory.ms.length > 300) {
+    if (priceHistory.ms.length > 1200) {
       priceHistory.ms.shift();
     }
   }

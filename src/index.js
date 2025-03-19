@@ -4,12 +4,12 @@ const cors = require('cors');
 const { connectToDatabase } = require('./lib/mongodb');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const allowedOrigins = process.env.AllowedOrigins;
 // Strict CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests only from the specified frontend URL
-    const allowedOrigins = ['https://crypto-bet-frontend.vercel.app'];
+    
     
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.includes(origin)) {

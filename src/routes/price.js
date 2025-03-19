@@ -11,16 +11,25 @@ const priceHistory = {
   '7d': [],    // Average data (30 minutes interval)
 };
 
-// // Function to print ms price every second
-// const printMsPrice = () => {
-//   if (priceHistory.ms.length > 0) {
-//     const latestPrice = priceHistory.ms[priceHistory.ms.length - 1];
-//     console.log(`[${new Date().toISOString()}] MS Price: $${priceHistory.ms.length}`);
-//   }
-// };
+// Constants for max data points
+const MAX_POINTS = {
+  ms: 300,     // 300 points for ms (2.5 minutes at 500ms intervals)
+  '5m': 300,   // 300 points for 5 minutes
+  '1h': 360,   // 360 points for 1 hour
+  '1d': 288,   // 288 points for 1 day
+  '7d': 336,   // 336 points for 7 days
+};
 
-// // Start printing ms price every second
-// setInterval(printMsPrice, 1000);
+// Function to print ms price every second
+const printMsPrice = () => {
+  if (priceHistory.ms.length > 0) {
+    const latestPrice = priceHistory.ms[priceHistory.ms.length - 1];
+    console.log(`[${new Date().toISOString()}] MS Price: $${latestPrice.price.toFixed(2)}`);
+  }
+};
+
+// Start printing ms price every second
+setInterval(printMsPrice, 1000);
 
 // Fetch current Solana price with retry logic
 const fetchSolanaPrice = async (retryCount = 0) => {
@@ -30,6 +39,7 @@ const fetchSolanaPrice = async (retryCount = 0) => {
     });
     return parseFloat(response.data.data.amount);
   } catch (error) {
+    console.error('Error fetching Solana price:', error);
     if (retryCount < 3) {
       await new Promise(resolve => setTimeout(resolve, 500));
       return fetchSolanaPrice(retryCount + 1);
@@ -53,7 +63,8 @@ const updatePriceHistory = async () => {
       average: newPrice // For ms, average is same as price
     });
     
-    if (priceHistory.ms.length > 1200) {
+    // Maintain exactly 300 data points
+    if (priceHistory.ms.length > MAX_POINTS.ms) {
       priceHistory.ms.shift();
     }
   }
@@ -83,10 +94,10 @@ const updatePriceHistory = async () => {
   };
 
   // Update average periods
-  updateAveragePeriod('5m', 1000, 300);      // 300 points, 1 second interval
-  updateAveragePeriod('1h', 10000, 360);     // 360 points, 10 seconds interval
-  updateAveragePeriod('1d', 300000, 288);    // 288 points, 5 minutes interval
-  updateAveragePeriod('7d', 1800000, 336);   // 336 points, 30 minutes interval
+  updateAveragePeriod('5m', 1000, MAX_POINTS['5m']);
+  updateAveragePeriod('1h', 10000, MAX_POINTS['1h']);
+  updateAveragePeriod('1d', 300000, MAX_POINTS['1d']);
+  updateAveragePeriod('7d', 1800000, MAX_POINTS['7d']);
 };
 
 // Start updating price history every 500ms

@@ -11,7 +11,7 @@ router.post('/login', async (req, res) => {
   
   try {
     const db = await getDb();
-    const user = await db.collection('betting').findOne({ "user_id": user_id });
+    const user = await db.collection('betting').findOne({ user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

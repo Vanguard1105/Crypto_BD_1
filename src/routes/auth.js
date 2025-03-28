@@ -85,15 +85,7 @@ router.post('/set-password', async (req, res) => {
       { $set: { password: hashedPassword , email: email} }
     );
 
-    const userData = {
-      username: user.username,
-      user_id: user_id,
-      publicKey: user.public_key,
-      hasPassword: !!user.password,
-      email: email
-    };
-
-    res.status(200).json(userData);
+    res.status(200).json({message: "Password is saved successfully!"});
   } catch (err) {
     console.error('Set password error:', err);
     res.status(500).json({ message: 'Server error' });

@@ -106,13 +106,14 @@ router.get('/getData/:user_id', async (req, res) => {
     const userData = {
       username: user.username,
       publicKey: user.public_key,
-      hasPassword: !!user.password
+      hasPassword: !!user.password,
+      email: user.email
     };
 
     res.status(200).json(userData);
   } catch (err) {
     console.error('Get data error:', err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: err });
   }
 });
 

@@ -97,7 +97,7 @@ router.get('/getData/:user_id', async (req, res) => {
   
   try {
     const db = await getDb(); // Ensure we await the database connection
-    const user = await db.collection('betting').findOne({ "user_id": user_id });
+    const user = await db.collection('betting').findOne({ user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

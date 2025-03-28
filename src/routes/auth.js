@@ -11,7 +11,7 @@ router.post('/login', async (req, res) => {
   
   try {
     const db = await getDb();
-    const user = await db.collection('betting').findOne({ user_id });
+    const user = await db.collection('users').findOne({ user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' + user_id + password });
@@ -80,12 +80,20 @@ router.post('/set-password', async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    await db.collection('betting').updateOne(
+    await db.collection('users').updateOne(
       { "user_id": user_id },
       { $set: { password: hashedPassword , email: email} }
     );
 
-    res.status(200).json({ message: 'Password set successfully' });
+    const userData = {
+      username: user.username,
+      user_id: user_id,
+      publicKey: user.public_key,
+      hasPassword: !!user.password,
+      email: email
+    };
+
+    res.status(200).json(userData);
   } catch (err) {
     console.error('Set password error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -97,13 +105,14 @@ router.get('/getData/:user_id', async (req, res) => {
   
   try {
     const db = await getDb(); // Ensure we await the database connection
-    const user = await db.collection('betting').findOne({ user_id });
+    const user = await db.collection('users').findOne({ user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' + user_id });
     }
 
     const userData = {
+      user_id: user.user_id,
       username: user.username,
       publicKey: user.public_key,
       hasPassword: !!user.password,

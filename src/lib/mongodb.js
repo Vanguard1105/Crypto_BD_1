@@ -17,7 +17,7 @@ const connectToDatabase = async () => {
 
   try {
     await client.connect();
-    const db = client.db('solana');
+    const db = client.db('CryptoBet');
     cachedClient = client;
     cachedDb = db;
     console.log('Successfully connected to MongoDB');

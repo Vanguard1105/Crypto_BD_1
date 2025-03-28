@@ -7,11 +7,11 @@ const JWT_SECRET = process.env.JWT_SECRET || 'vanguard1105';
 
 // Login endpoint
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { user_id, password } = req.body;
   
   try {
     const db = await getDb();
-    const user = await db.collection('betting').findOne({ username });
+    const user = await db.collection('betting').findOne({ "user_id": user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -73,7 +73,7 @@ router.get('/protected', verifyToken, (req, res) => {
 
 // Signup/Set password endpoint
 router.post('/set-password', async (req, res) => {
-  const { username, password } = req.body;
+  const { user_id, email, password } = req.body;
 
   try {
     const db = await getDb(); // Ensure we await the database connection
@@ -81,8 +81,8 @@ router.post('/set-password', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     await db.collection('betting').updateOne(
-      { username },
-      { $set: { password: hashedPassword } }
+      { "user_id": user_id },
+      { $set: { password: hashedPassword , email: email} }
     );
 
     res.status(200).json({ message: 'Password set successfully' });
@@ -92,12 +92,12 @@ router.post('/set-password', async (req, res) => {
   }
 });
 
-router.get('/getData/:username', async (req, res) => {
-  const { username } = req.params;
+router.get('/getData/:user_id', async (req, res) => {
+  const { user_id } = req.params;
   
   try {
     const db = await getDb(); // Ensure we await the database connection
-    const user = await db.collection('betting').findOne({ username });
+    const user = await db.collection('betting').findOne({ "user_id": user_id });
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

@@ -49,6 +49,8 @@ const allowedOrigins = process.env.AllowedOrigins;
 //   }
 // });
 
+// 
+
 // Update CORS options to allow all origins  
 const corsOptions = {  
   origin: '*', // Allow requests from any origin  
